@@ -773,6 +773,117 @@ body.modal-open {
   opacity: 0.8;
 }
 
+/* Collapsible forecast selector */
+.forecast-toggle-wrapper {
+  margin-top: 1.5rem;
+}
+
+/* Full-width clickable bar */
+.forecast-toggle {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  border-radius: var(--radius);
+  background: rgba(15, 23, 42, 0.55);
+  color: var(--text);
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  user-select: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.forecast-toggle:hover {
+  background: rgba(15, 23, 42, 0.75);
+  border-color: var(--accent);
+}
+
+/* The hidden menu area */
+.forecast-menu {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.35s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+/* Option buttons */
+.forecast-option {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  background: rgba(10, 18, 35, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: var(--text);
+  text-align: left;
+  font-size: 0.95rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.forecast-option:hover {
+  background: rgba(20, 30, 50, 0.85);
+  border-color: var(--accent);
+}
+
+/* Arrow rotation when open */
+.forecast-toggle.open .arrow {
+  transform: rotate(180deg);
+}
+
+/* Extra days are hidden by default */
+.forecast-item.is-extra {
+  display: none;
+}
+
+/* When expanded, show them */
+.forecast-list.expanded .forecast-item.is-extra {
+  display: block;
+}
+
+/* Full-width arrow bar under the forecast */
+.forecast-expand-toggle {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  border-radius: var(--radius);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.1s ease;
+}
+
+.forecast-expand-toggle:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(248, 250, 252, 0.6);
+  transform: translateY(-1px);
+}
+
+.forecast-expand-toggle .arrow {
+  transition: transform 0.2s ease;
+}
+
+/* Rotate arrow when expanded */
+.forecast-expand-toggle.is-expanded .arrow {
+  transform: rotate(180deg);
+}
+
+
 /* Responsive tweaks */
 @media (max-width: 600px) {
   .current-main {

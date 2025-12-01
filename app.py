@@ -4,7 +4,6 @@ from flask import Flask, render_template, request
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 
-
 # matplotlib for server-side charts
 import matplotlib
 matplotlib.use("Agg")  # non-GUI backend for servers / PyCharm
@@ -16,8 +15,11 @@ app = Flask(__name__)
 
 API_KEY = os.getenv("WEATHER_API_KEY")
 
+# How many days we always ask WeatherAPI for
+FULL_FORECAST_DAYS = 14
 
-def fetch_weather(query: str, days: int = 5):
+
+def fetch_weather(query: str, days: int = FULL_FORECAST_DAYS):
     """
     Calls WeatherAPI.com forecast endpoint for the given location query
     and number of days.
@@ -84,7 +86,6 @@ def generate_hourly_chart(day_data: dict, location_name: str) -> str | None:
     filepath = os.path.join(charts_dir, filename)
 
     # ---- nicer dark chart style ----
-    import matplotlib.pyplot as plt
     plt.style.use("default")
 
     fig, ax = plt.subplots(figsize=(7.5, 3), facecolor="#020617")
@@ -118,29 +119,28 @@ def generate_hourly_chart(day_data: dict, location_name: str) -> str | None:
 
 
 def derive_bg_class(current: dict) -> str:
-  """
-  Map current weather to a background theme class.
-  Uses condition text + is_day flag.
-  """
-  if not current:
-      return "default"
+    """
+    Map current weather to a background theme class.
+    Uses condition text + is_day flag.
+    """
+    if not current:
+        return "default"
 
-  text = str(current.get("condition", {}).get("text", "")).lower()
-  is_day = current.get("is_day", 1)
+    text = str(current.get("condition", {}).get("text", "")).lower()
+    is_day = current.get("is_day", 1)
 
-  if any(word in text for word in ["thunder", "storm"]):
-      return "storm"
-  if any(word in text for word in ["snow", "blizzard", "sleet", "ice"]):
-      return "snow"
-  if any(word in text for word in ["rain", "drizzle", "shower"]):
-      return "rain"
-  if any(word in text for word in ["fog", "mist", "haze", "overcast"]):
-      return "fog"
-  if "cloud" in text or "overcast" in text:
-      return "cloudy"
-  # fallback sunny/clear
-  return "clear-day" if is_day == 1 else "clear-night"
-
+    if any(word in text for word in ["thunder", "storm"]):
+        return "storm"
+    if any(word in text for word in ["snow", "blizzard", "sleet", "ice"]):
+        return "snow"
+    if any(word in text for word in ["rain", "drizzle", "shower"]):
+        return "rain"
+    if any(word in text for word in ["fog", "mist", "haze", "overcast"]):
+        return "fog"
+    if "cloud" in text or "overcast" in text:
+        return "cloudy"
+    # fallback sunny/clear
+    return "clear-day" if is_day == 1 else "clear-night"
 
 
 def attach_charts_to_forecast(weather_data: dict) -> None:
@@ -168,13 +168,14 @@ def attach_charts_to_forecast(weather_data: dict) -> None:
         if chart_filename:
             day["chart_image"] = chart_filename
 
+
 def compute_weather_map_timestamp() -> str:
-        """
-        Returns WeatherAPI weather-map timestamp in the form YYYYMMDDHH (UTC),
-        used in the tile URL like .../{YYYYMMDDHH}/{z}/{x}/{y}.png
-        """
-        now_utc = datetime.now(timezone.utc)
-        return now_utc.strftime("%Y%m%d%H")
+    """
+    Returns WeatherAPI weather-map timestamp in the form YYYYMMDDHH (UTC),
+    used in the tile URL like .../{YYYYMMDDHH}/{z}/{x}/{y}.png
+    """
+    now_utc = datetime.now(timezone.utc)
+    return now_utc.strftime("%Y%m%d%H")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -182,7 +183,8 @@ def index():
     query = ""
     weather_data = None
     error = None
-    days = 5  # default view is 5-day
+    # This is just the "collapsed" view length the UI starts with
+    days_view = 5
     bg_theme = "default"
 
     # compute a timestamp for WeatherAPI map tiles (UTC YYYYMMDDHH)
@@ -190,21 +192,15 @@ def index():
 
     if request.method == "POST":
         query = request.form.get("location", "").strip()
-        days_str = request.form.get("days", "5")
-
-        try:
-            days = int(days_str)
-        except ValueError:
-            days = 5
 
         if not query:
             error = "Please enter a city name or ZIP code."
         else:
-            weather_data, error = fetch_weather(query, days=days)
+            weather_data, error = fetch_weather(query, days=FULL_FORECAST_DAYS)
             if weather_data and not error:
                 attach_charts_to_forecast(weather_data)
                 bg_theme = derive_bg_class(weather_data.get("current", {}))
-                # (optional) recompute timestamp right when we actually have data
+                # recompute timestamp right when we actually have data
                 map_timestamp = compute_weather_map_timestamp()
 
     return render_template(
@@ -212,12 +208,10 @@ def index():
         query=query,
         weather=weather_data,
         error=error,
-        days=days,
+        days=days_view,          # still available if the template wants it
         bg_theme=bg_theme,
         map_timestamp=map_timestamp,
     )
-
-
 
 
 if __name__ == "__main__":

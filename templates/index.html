@@ -41,23 +41,6 @@
           Last updated: {{ current.last_updated }}
         </p>
       </div>
-
-      {% if query %}
-        <form method="post">
-          <input type="hidden" name="location" value="{{ query }}">
-          {% if days|int == 14 %}
-            <input type="hidden" name="days" value="5">
-            <button type="submit" class="secondary-btn">
-              Show 5-Day Forecast
-            </button>
-          {% else %}
-            <input type="hidden" name="days" value="14">
-            <button type="submit" class="secondary-btn">
-              Show 14-Day Forecast
-            </button>
-          {% endif %}
-        </form>
-      {% endif %}
     </div>
 
     <!-- Current conditions card -->
@@ -112,12 +95,12 @@
     </div>
 
     <!-- Forecast timeline -->
-    <h3>{{ days }}-Day Forecast</h3>
+    <h3 id="forecastTitle">5-Day Forecast</h3>
 
-    <div class="forecast-list">
+    <div class="forecast-list" id="forecastList">
       {% for day in forecast %}
         <article
-          class="card forecast-item"
+          class="card forecast-item {% if loop.index > 5 %}is-extra{% endif %}"
           data-date="{{ day.date }}"
           data-date-display="{{ day.date_pretty if day.date_pretty is defined else day.date }}"
           data-condition="{{ day.day.condition.text }}"
@@ -132,7 +115,6 @@
           data-hours-times='{{ day.hour | map(attribute="time") | list | tojson }}'
           data-hours-temps='{{ day.hour | map(attribute="temp_f") | list | tojson }}'
           data-hours-icons='{{ day.hour | map(attribute="condition.icon") | list | tojson }}'
-
         >
           <h4>{{ day.date_pretty if day.date_pretty is defined else day.date }}</h4>
           <div class="forecast-main">
@@ -154,7 +136,18 @@
       {% endfor %}
     </div>
 
-        <!-- Day detail modal -->
+    {% if forecast|length > 5 %}
+      <button
+        type="button"
+        class="forecast-expand-toggle"
+        id="forecastExpandToggle"
+      >
+        <span class="label">Show all {{ forecast|length }} days</span>
+        <span class="arrow">▼</span>
+      </button>
+    {% endif %}
+
+    <!-- Day detail modal -->
     <div id="day-modal" class="modal" aria-hidden="true">
       <div class="modal-backdrop"></div>
       <div class="modal-dialog" role="dialog" aria-modal="true">
@@ -219,7 +212,7 @@
       </div>
     </div>
 
-      <!-- Current weather detail modal -->
+    <!-- Current weather detail modal -->
     <div id="current-modal" class="modal" aria-hidden="true">
       <div class="modal-backdrop"></div>
       <div class="modal-dialog" role="dialog" aria-modal="true">
@@ -278,7 +271,7 @@
             <!-- Weather map -->
             <div class="modal-map card-section">
               <div id="currentMap" class="leaflet-map"></div>
-                <p class = "map-credit">
+                <p class="map-credit">
                     Precipitation overlay from WeatherAPI.com Weather Maps
                 </p>
             </div>
@@ -287,11 +280,9 @@
       </div>
     </div>
 
-
-
   </section>
 
-     <script>
+  <script>
   // From Flask (UTC timestamp like 2025120114)
   const WEATHER_MAP_TIMESTAMP = "{{ map_timestamp }}";
   const WEATHER_MAP_LAYER = "precip"; // Precipitation overlay
@@ -476,7 +467,7 @@
               '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           }).addTo(currentMap);
 
-          // WeatherAPI temperature overlay tiles (no API key required in URL)
+          // WeatherAPI precipitation overlay tiles
           const overlayUrl = `https://weathermaps.weatherapi.com/${WEATHER_MAP_LAYER}/tiles/${WEATHER_MAP_TIMESTAMP}/{z}/{x}/{y}.png`;
           L.tileLayer(overlayUrl, {
             opacity: 0.65,
@@ -509,6 +500,12 @@
 
         modal.classList.add("is-open");
         document.body.classList.add("modal-open");
+
+        if (currentMap) {
+          setTimeout(() => {
+            currentMap.invalidateSize();
+          }, 0);
+        }
       }
 
       function closeModal() {
@@ -526,10 +523,46 @@
         }
       });
     })();
+
+    /* -------- Forecast expand / collapse (5 vs all days) -------- */
+    (function setupForecastExpand() {
+      const list = document.getElementById("forecastList");
+      const toggle = document.getElementById("forecastExpandToggle");
+      const title = document.getElementById("forecastTitle");
+      if (!list || !toggle) return;
+
+      const totalDays = list.querySelectorAll(".forecast-item").length;
+      if (totalDays <= 5) {
+        // nothing extra to expand
+        toggle.style.display = "none";
+        return;
+      }
+
+      function setExpanded(expanded) {
+        if (expanded) {
+          list.classList.add("expanded");
+          toggle.classList.add("is-expanded");
+          if (title) title.textContent = `${totalDays}-Day Forecast`;
+          toggle.querySelector(".label").textContent = "Show only 5 days";
+        } else {
+          list.classList.remove("expanded");
+          toggle.classList.remove("is-expanded");
+          if (title) title.textContent = "5-Day Forecast";
+          toggle.querySelector(".label").textContent = `Show all ${totalDays} days`;
+        }
+      }
+
+      let expanded = false;
+      setExpanded(false); // start collapsed (5 days)
+
+      toggle.addEventListener("click", () => {
+        expanded = !expanded;
+        setExpanded(expanded);
+      });
+    })();
+
   });
-</script>
-
-
+  </script>
 
 {% endif %}
 {% endblock %}
