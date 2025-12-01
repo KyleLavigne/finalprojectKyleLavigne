@@ -1,10 +1,119 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block content %}
+<section class="search-section">
+  <form method="post" class="search-form">
+    <label for="location">Enter City or ZIP Code</label>
+    <div class="input-row">
+      <input
+        type="text"
+        id="location"
+        name="location"
+        placeholder="e.g., New York or 67601"
+        value="{{ query or '' }}"
+        required
+      />
+      <!-- Default main view is 5-day forecast -->
+      <input type="hidden" name="days" value="5">
+      <button type="submit">Get Weather (5-Day)</button>
+    </div>
+  </form>
+
+  {% if error %}
+    <div class="alert alert-error">
+      {{ error }}
+    </div>
+  {% endif %}
+</section>
+
+{% if weather %}
+  {% set loc = weather.location %}
+  {% set current = weather.current %}
+  {% set forecast = weather.forecast.forecastday %}
+
+  <section class="results-section">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; flex-wrap:wrap;">
+      <div>
+        <h2>
+          Weather for {{ loc.name }}, {{ loc.region }} {{ loc.country }}
+        </h2>
+        <p class="updated-at">
+          Last updated: {{ current.last_updated }}
+        </p>
+      </div>
+
+      <!-- Toggle between 5-day and 14-day forecast -->
+      {% if query %}
+        <form method="post">
+          <input type="hidden" name="location" value="{{ query }}">
+          {% if days|int == 14 %}
+            <input type="hidden" name="days" value="5">
+            <button type="submit" class="secondary-btn">
+              Show 5-Day Forecast
+            </button>
+          {% else %}
+            <input type="hidden" name="days" value="14">
+            <button type="submit" class="secondary-btn">
+              Show 14-Day Forecast
+            </button>
+          {% endif %}
+        </form>
+      {% endif %}
+    </div>
+
+    <!-- Current conditions card -->
+    <div class="card current-card">
+      <div class="current-main">
+        <div class="current-temp">
+          <span class="temp">{{ current.temp_f|round(0) }}°F</span>
+          <span class="condition">{{ current.condition.text }}</span>
+        </div>
+        <div class="current-icon">
+          <img src="https:{{ current.condition.icon }}" alt="{{ current.condition.text }}">
+        </div>
+      </div>
+
+      <div class="current-details">
+        <div class="detail">
+          <span class="label">Feels Like</span>
+          <span class="value">{{ current.feelslike_f|round(0) }}°F</span>
+        </div>
+        <div class="detail">
+          <span class="label">Humidity</span>
+          <span class="value">{{ current.humidity }}%</span>
+        </div>
+        <div class="detail">
+          <span class="label">Wind</span>
+          <span class="value">{{ current.wind_mph }} mph {{ current.wind_dir }}</span>
+        </div>
+        <div class="detail">
+          <span class="label">Pressure</span>
+          <span class="value">{{ current.pressure_in }} in</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forecast -->
+    <h3>{{ days }}-Day Forecast</h3>
+    <div class="forecast-grid">
+      {% for day in forecast %}
+        <article class="card forecast-card">
+          <h4>{{ day.date }}</h4>
+          <div class="forecast-main">
+            <img src="https:{{ day.day.condition.icon }}" alt="{{ day.day.condition.text }}">
+            <div class="temps">
+              <span class="high">High: {{ day.day.maxtemp_f|round(0) }}°F</span>
+              <span class="low">Low: {{ day.day.mintemp_f|round(0) }}°F</span>
+            </div>
+          </div>
+          <p class="forecast-text">{{ day.day.condition.text }}</p>
+          <p class="small">
+            Avg Humidity: {{ day.day.avghumidity }}%<br>
+            Chance of rain: {{ day.day.daily_chance_of_rain }}%
+          </p>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
+{% endblock %}

@@ -1,10 +1,27 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="utf-8" />
+  <title>Weather Forecast Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <header class="site-header">
+    <div class="container">
+      <h1>Weather Forecast Dashboard</h1>
+      <p class="subtitle">Real-time weather by city or ZIP code</p>
+    </div>
+  </header>
 
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; {{ 2025 }} Kyle Lavigne &mdash; Final Project (Flask + WeatherAPI.com)</p>
+    </div>
+  </footer>
 </body>
 </html>
