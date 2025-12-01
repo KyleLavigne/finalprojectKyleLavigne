@@ -4,9 +4,19 @@
   <meta charset="utf-8" />
   <title>Weather Forecast Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- ✅ Your main stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  >
 </head>
-<body>
+<body class="weather-{{ bg_theme or 'default' }}">
   <header class="site-header">
     <div class="container">
       <h1>Weather Forecast Dashboard</h1>
@@ -20,8 +30,15 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>&copy; {{ 2025 }} Kyle Lavigne &mdash; Final Project (Flask + WeatherAPI.com)</p>
+      <p>&copy; 2025 Kyle Lavigne — Final Project</p>
     </div>
   </footer>
+
+  <!-- Leaflet JS (fine to keep here, just usually better at end of body) -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 </body>
 </html>

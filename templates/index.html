@@ -13,7 +13,7 @@
         value="{{ query or '' }}"
         required
       />
-      <!-- Default main view is 5-day forecast -->
+      <!-- default main view is 5-day forecast -->
       <input type="hidden" name="days" value="5">
       <button type="submit">Get Weather (5-Day)</button>
     </div>
@@ -42,7 +42,6 @@
         </p>
       </div>
 
-      <!-- Toggle between 5-day and 14-day forecast -->
       {% if query %}
         <form method="post">
           <input type="hidden" name="location" value="{{ query }}">
@@ -62,14 +61,33 @@
     </div>
 
     <!-- Current conditions card -->
-    <div class="card current-card">
+    <div
+      class="card current-card"
+      id="current-card"
+      data-location="{{ loc.name }}, {{ loc.region }} {{ loc.country }}"
+      data-condition="{{ current.condition.text }}"
+      data-temp="{{ current.temp_f|round(0) }}°F"
+      data-feels="{{ current.feelslike_f|round(0) }}°F"
+      data-humidity="{{ current.humidity }}%"
+      data-wind="{{ current.wind_mph }} mph {{ current.wind_dir }}"
+      data-pressure="{{ current.pressure_in }} in"
+      data-uv="{{ current.uv }}"
+      data-visibility="{{ current.vis_miles }} mi"
+      data-cloud="{{ current.cloud }}%"
+      data-last-updated="{{ current.last_updated }}"
+      data-lat="{{ loc.lat }}"
+      data-lon="{{ loc.lon }}"
+    >
       <div class="current-main">
         <div class="current-temp">
           <span class="temp">{{ current.temp_f|round(0) }}°F</span>
           <span class="condition">{{ current.condition.text }}</span>
         </div>
         <div class="current-icon">
-          <img src="https:{{ current.condition.icon }}" alt="{{ current.condition.text }}">
+          <img
+            src="{{ 'https://' ~ current.condition.icon.lstrip('/') }}"
+            alt="{{ current.condition.text }}"
+          >
         </div>
       </div>
 
@@ -93,14 +111,35 @@
       </div>
     </div>
 
-    <!-- Forecast -->
+    <!-- Forecast timeline -->
     <h3>{{ days }}-Day Forecast</h3>
-    <div class="forecast-grid">
+
+    <div class="forecast-list">
       {% for day in forecast %}
-        <article class="card forecast-card">
-          <h4>{{ day.date }}</h4>
+        <article
+          class="card forecast-item"
+          data-date="{{ day.date }}"
+          data-date-display="{{ day.date_pretty if day.date_pretty is defined else day.date }}"
+          data-condition="{{ day.day.condition.text }}"
+          data-max="{{ day.day.maxtemp_f|round(0) }}°F"
+          data-min="{{ day.day.mintemp_f|round(0) }}°F"
+          data-humidity="{{ day.day.avghumidity }}%"
+          data-rain="{{ day.day.daily_chance_of_rain }}%"
+          data-wind="{{ day.day.maxwind_mph }} mph"
+          data-sunrise="{{ day.astro.sunrise }}"
+          data-sunset="{{ day.astro.sunset }}"
+          data-chart-image="{{ day.chart_image if 'chart_image' in day else '' }}"
+          data-hours-times='{{ day.hour | map(attribute="time") | list | tojson }}'
+          data-hours-temps='{{ day.hour | map(attribute="temp_f") | list | tojson }}'
+          data-hours-icons='{{ day.hour | map(attribute="condition.icon") | list | tojson }}'
+
+        >
+          <h4>{{ day.date_pretty if day.date_pretty is defined else day.date }}</h4>
           <div class="forecast-main">
-            <img src="https:{{ day.day.condition.icon }}" alt="{{ day.day.condition.text }}">
+            <img
+              src="{{ 'https://' ~ day.day.condition.icon.lstrip('/') }}"
+              alt="{{ day.day.condition.text }}"
+            >
             <div class="temps">
               <span class="high">High: {{ day.day.maxtemp_f|round(0) }}°F</span>
               <span class="low">Low: {{ day.day.mintemp_f|round(0) }}°F</span>
@@ -109,11 +148,388 @@
           <p class="forecast-text">{{ day.day.condition.text }}</p>
           <p class="small">
             Avg Humidity: {{ day.day.avghumidity }}%<br>
-            Chance of rain: {{ day.day.daily_chance_of_rain }}%
+            Chance of Rain: {{ day.day.daily_chance_of_rain }}%
           </p>
         </article>
       {% endfor %}
     </div>
+
+        <!-- Day detail modal -->
+    <div id="day-modal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop"></div>
+      <div class="modal-dialog" role="dialog" aria-modal="true">
+        <button class="modal-close" type="button" aria-label="Close details">&times;</button>
+
+        <div class="card modal-card">
+          <header class="modal-header">
+            <div>
+              <h3 class="modal-title" data-field="date">Day Details</h3>
+              <p class="modal-condition" data-field="condition"></p>
+            </div>
+          </header>
+
+          <!-- top area: summary + chart side by side -->
+          <div class="modal-top">
+            <div class="modal-summary">
+              <div class="modal-grid">
+                <div class="modal-detail">
+                  <span class="label">High</span>
+                  <span class="value" data-field="max"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Low</span>
+                  <span class="value" data-field="min"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Avg Humidity</span>
+                  <span class="value" data-field="humidity"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Chance of Rain</span>
+                  <span class="value" data-field="rain"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Max Wind</span>
+                  <span class="value" data-field="wind"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Sunrise</span>
+                  <span class="value" data-field="sunrise"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Sunset</span>
+                  <span class="value" data-field="sunset"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-chart">
+              <img id="hourlyChartImg" class="chart-img" src="" alt="Hourly Temperature Graph">
+            </div>
+          </div>
+
+          <!-- bottom: hourly list -->
+          <div class="hourly-section">
+            <h4 class="hourly-heading">Hourly Details</h4>
+            <div class="hourly-list" id="hourlyList">
+              <!-- filled dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <!-- Current weather detail modal -->
+    <div id="current-modal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop"></div>
+      <div class="modal-dialog" role="dialog" aria-modal="true">
+        <button class="modal-close" type="button" aria-label="Close current weather details">&times;</button>
+
+        <div class="card modal-card">
+          <header class="modal-header">
+            <div>
+              <h3 class="modal-title" data-current-field="location">Current Weather</h3>
+              <p class="modal-condition" data-current-field="condition"></p>
+            </div>
+          </header>
+
+          <div class="modal-top current-top">
+            <div class="modal-summary">
+              <div class="modal-grid">
+                <div class="modal-detail">
+                  <span class="label">Temperature</span>
+                  <span class="value" data-current-field="temp"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Feels Like</span>
+                  <span class="value" data-current-field="feels"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Humidity</span>
+                  <span class="value" data-current-field="humidity"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Wind</span>
+                  <span class="value" data-current-field="wind"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Pressure</span>
+                  <span class="value" data-current-field="pressure"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">UV Index</span>
+                  <span class="value" data-current-field="uv"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Visibility</span>
+                  <span class="value" data-current-field="visibility"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Cloud Cover</span>
+                  <span class="value" data-current-field="cloud"></span>
+                </div>
+                <div class="modal-detail">
+                  <span class="label">Last Updated</span>
+                  <span class="value" data-current-field="last_updated"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Weather map -->
+            <div class="modal-map card-section">
+              <div id="currentMap" class="leaflet-map"></div>
+                <p class = "map-credit">
+                    Temperature overlay from WeatherAPI.com Weather Maps
+                </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
   </section>
+
+     <script>
+  // From Flask (UTC timestamp like 2025120114)
+  const WEATHER_MAP_TIMESTAMP = "{{ map_timestamp }}";
+  const WEATHER_MAP_LAYER = "tmp2m"; // Temperature at 2m
+  let currentMap = null;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const chartsBase = "{{ url_for('static', filename='charts') }}/";
+
+    /* -------- Day detail modal (forecast cards) -------- */
+    (function setupDayModal() {
+      const modal = document.getElementById("day-modal");
+      if (!modal) return;
+
+      const backdrop = modal.querySelector(".modal-backdrop");
+      const closeBtn = modal.querySelector(".modal-close");
+      const forecastItems = document.querySelectorAll(".forecast-item");
+      const hourlyListEl = document.getElementById("hourlyList");
+      const chartImg = document.getElementById("hourlyChartImg");
+
+      const fieldEls = {
+        date: modal.querySelector('[data-field="date"]'),
+        condition: modal.querySelector('[data-field="condition"]'),
+        max: modal.querySelector('[data-field="max"]'),
+        min: modal.querySelector('[data-field="min"]'),
+        humidity: modal.querySelector('[data-field="humidity"]'),
+        rain: modal.querySelector('[data-field="rain"]'),
+        wind: modal.querySelector('[data-field="wind"]'),
+        sunrise: modal.querySelector('[data-field="sunrise"]'),
+        sunset: modal.querySelector('[data-field="sunset"]'),
+      };
+
+      function buildHourlyList(times, temps, icons) {
+        if (!hourlyListEl) return;
+        hourlyListEl.innerHTML = "";
+
+        times.forEach((timeStr, idx) => {
+          const temp = temps[idx];
+          const iconRaw = icons && icons[idx];
+
+          const parts = (timeStr || "").split(" ");
+          const timeOnly = parts[1] || parts[0] || "";
+
+          // Format to 12-hour like "1 AM"
+          let label = timeOnly;
+          if (timeOnly.includes(":")) {
+            const [hStr] = timeOnly.split(":");
+            let hour = parseInt(hStr, 10);
+            if (!isNaN(hour)) {
+              const suffix = hour >= 12 ? "PM" : "AM";
+              hour = hour % 12;
+              if (hour === 0) hour = 12;
+              label = `${hour} ${suffix}`;
+            }
+          }
+
+          let iconUrl = "";
+          if (iconRaw) {
+            if (iconRaw.startsWith("http")) {
+              iconUrl = iconRaw;
+            } else {
+              iconUrl = "https://" + iconRaw.replace(/^\/+/, "");
+            }
+          }
+
+          const card = document.createElement("div");
+          card.className = "hourly-card";
+          card.innerHTML = `
+            <div class="hourly-temp">${Math.round(temp)}°F</div>
+            ${iconUrl ? `<img src="${iconUrl}" alt="" class="hourly-icon">` : ""}
+            <div class="hourly-time">${label}</div>
+          `;
+          hourlyListEl.appendChild(card);
+        });
+      }
+
+      function openModal(card) {
+        const d = card.dataset;
+
+        if (fieldEls.date) fieldEls.date.textContent = d.dateDisplay || d.date || "";
+        if (fieldEls.condition) fieldEls.condition.textContent = d.condition || "";
+
+        if (fieldEls.max) fieldEls.max.textContent = d.max || "";
+        if (fieldEls.min) fieldEls.min.textContent = d.min || "";
+        if (fieldEls.humidity) fieldEls.humidity.textContent = d.humidity || "";
+        if (fieldEls.rain) fieldEls.rain.textContent = d.rain || "";
+        if (fieldEls.wind) fieldEls.wind.textContent = d.wind || "";
+        if (fieldEls.sunrise) fieldEls.sunrise.textContent = d.sunrise || "";
+        if (fieldEls.sunset) fieldEls.sunset.textContent = d.sunset || "";
+
+        if (chartImg && d.chartImage) {
+          chartImg.src = chartsBase + d.chartImage;
+        }
+
+        let times = [];
+        let temps = [];
+        let icons = [];
+
+        if (d.hoursTimes && d.hoursTemps) {
+          try {
+            times = JSON.parse(d.hoursTimes);
+            temps = JSON.parse(d.hoursTemps);
+          } catch (e) {
+            console.error("Failed to parse hourly data", e);
+          }
+        }
+
+        if (d.hoursIcons) {
+          try {
+            icons = JSON.parse(d.hoursIcons);
+          } catch (e) {
+            console.error("Failed to parse hourly icons", e);
+          }
+        }
+
+        buildHourlyList(times, temps, icons);
+
+        modal.classList.add("is-open");
+        document.body.classList.add("modal-open");
+      }
+
+      function closeModal() {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("modal-open");
+      }
+
+      forecastItems.forEach((card) => {
+        card.addEventListener("click", () => openModal(card));
+      });
+
+      backdrop?.addEventListener("click", closeModal);
+      closeBtn?.addEventListener("click", closeModal);
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+    })();
+
+    /* -------- Current weather modal (main card + WeatherAPI map) -------- */
+    (function setupCurrentModal() {
+      const modal = document.getElementById("current-modal");
+      const currentCard = document.getElementById("current-card");
+      if (!modal || !currentCard) return;
+
+      const backdrop = modal.querySelector(".modal-backdrop");
+      const closeBtn = modal.querySelector(".modal-close");
+      const mapContainer = document.getElementById("currentMap");
+
+      const fieldEls = {
+        location: modal.querySelector('[data-current-field="location"]'),
+        condition: modal.querySelector('[data-current-field="condition"]'),
+        temp: modal.querySelector('[data-current-field="temp"]'),
+        feels: modal.querySelector('[data-current-field="feels"]'),
+        humidity: modal.querySelector('[data-current-field="humidity"]'),
+        wind: modal.querySelector('[data-current-field="wind"]'),
+        pressure: modal.querySelector('[data-current-field="pressure"]'),
+        uv: modal.querySelector('[data-current-field="uv"]'),
+        visibility: modal.querySelector('[data-current-field="visibility"]'),
+        cloud: modal.querySelector('[data-current-field="cloud"]'),
+        last_updated: modal.querySelector('[data-current-field="last_updated"]'),
+      };
+
+      function ensureCurrentMap(lat, lon) {
+        if (!window.L || !mapContainer) return;
+
+        const latNum = parseFloat(lat);
+        const lonNum = parseFloat(lon);
+        if (isNaN(latNum) || isNaN(lonNum)) return;
+
+        const center = [latNum, lonNum];
+
+        if (!currentMap) {
+          currentMap = L.map("currentMap", {
+            zoomControl: true,
+          }).setView(center, 6);
+
+          // Base OpenStreetMap tiles
+          L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 10,
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          }).addTo(currentMap);
+
+          // WeatherAPI temperature overlay tiles (no API key required in URL)
+          const overlayUrl = `https://weathermaps.weatherapi.com/${WEATHER_MAP_LAYER}/tiles/${WEATHER_MAP_TIMESTAMP}/{z}/{x}/{y}.png`;
+          L.tileLayer(overlayUrl, {
+            opacity: 0.65,
+          }).addTo(currentMap);
+        } else {
+          currentMap.setView(center, currentMap.getZoom() || 6);
+        }
+      }
+
+      function openModal() {
+        const d = currentCard.dataset;
+
+        if (fieldEls.location) fieldEls.location.textContent = d.location || "Current Weather";
+        if (fieldEls.condition) fieldEls.condition.textContent = d.condition || "";
+        if (fieldEls.temp) fieldEls.temp.textContent = d.temp || "";
+        if (fieldEls.feels) fieldEls.feels.textContent = d.feels || "";
+        if (fieldEls.humidity) fieldEls.humidity.textContent = d.humidity || "";
+        if (fieldEls.wind) fieldEls.wind.textContent = d.wind || "";
+        if (fieldEls.pressure) fieldEls.pressure.textContent = d.pressure || "";
+        if (fieldEls.uv) fieldEls.uv.textContent = d.uv || "";
+        if (fieldEls.visibility) fieldEls.visibility.textContent = d.visibility || "";
+        if (fieldEls.cloud) fieldEls.cloud.textContent = d.cloud || "";
+        if (fieldEls.last_updated) fieldEls.last_updated.textContent =
+          d.lastUpdated || d.last_updated || "";
+
+        // Center WeatherAPI map on current location
+        if (d.lat && d.lon) {
+          ensureCurrentMap(d.lat, d.lon);
+        }
+
+        modal.classList.add("is-open");
+        document.body.classList.add("modal-open");
+      }
+
+      function closeModal() {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("modal-open");
+      }
+
+      currentCard.addEventListener("click", openModal);
+      backdrop?.addEventListener("click", closeModal);
+      closeBtn?.addEventListener("click", closeModal);
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+    })();
+  });
+</script>
+
+
+
 {% endif %}
 {% endblock %}
