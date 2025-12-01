@@ -737,59 +737,40 @@ body.modal-open {
 }
 
 /* Map container for current weather detail modal */
+/* Map container for current weather detail modal */
 .modal-map {
   margin: 0;
   display: flex;
-  align-items: stretch;
-  padding: 0.35rem 0.4rem;
+  flex-direction: column;
+  padding: 0;                      /* 🔄 remove inner padding */
   border-radius: 14px;
   background:
     radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 55%),
     rgba(15, 23, 42, 0.9);
   border: 1px solid rgba(148, 163, 184, 0.45);
   min-height: 260px;
+  overflow: hidden;                /* 🔄 keep everything clipped to rounded corners */
 }
 
-.modal-map iframe {
-  width: 100%;
-  height: 100%;
-  min-height: 240px;
-  border: none;
-  border-radius: 10px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
-}
-
-.current-top {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.8fr);
-  gap: 1rem;
-  align-items: stretch;
-}
-
-/* Leaflet map container inside modal */
+/* Leaflet map fills the whole container */
 .leaflet-map {
   width: 100%;
-  height: 340px;
-  border-radius: 12px;
+  height: 100%;                    /* 🔄 fill vertical space too */
+  min-height: 340px;
+  flex: 1 1 auto;                  /* 🔄 expand to fill .modal-map */
+  border-radius: 14px 14px 0 0;    /* top corners rounded, bottom straight */
   overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
-  margin-bottom: 0.4rem;
+  box-shadow: none;                /* shadow is already on the outer card */
+  margin: 0;
 }
 
 /* Little credit line under the map */
 .map-credit {
-  margin: 0;
+  margin: 0.25rem 0.75rem 0.6rem;  /* small padding inside the card */
   font-size: 0.75rem;
   color: var(--muted);
   text-align: right;
   opacity: 0.8;
-}
-
-/* Smaller screens */
-@media (max-width: 480px) {
-  .modal-dialog {
-    margin: 0 1rem;
-  }
 }
 
 /* Responsive tweaks */

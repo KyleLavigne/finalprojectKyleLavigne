@@ -279,7 +279,7 @@
             <div class="modal-map card-section">
               <div id="currentMap" class="leaflet-map"></div>
                 <p class = "map-credit">
-                    Temperature overlay from WeatherAPI.com Weather Maps
+                    Precipitation overlay from WeatherAPI.com Weather Maps
                 </p>
             </div>
           </div>
@@ -294,7 +294,7 @@
      <script>
   // From Flask (UTC timestamp like 2025120114)
   const WEATHER_MAP_TIMESTAMP = "{{ map_timestamp }}";
-  const WEATHER_MAP_LAYER = "tmp2m"; // Temperature at 2m
+  const WEATHER_MAP_LAYER = "precip"; // Precipitation overlay
   let currentMap = null;
 
   document.addEventListener("DOMContentLoaded", function () {
