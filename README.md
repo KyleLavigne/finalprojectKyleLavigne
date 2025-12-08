@@ -3,66 +3,54 @@
 ### Final Project
  
  
-# Project Title
+# PyCast - Weather Website
  
-Simple overview of use/purpose.
+PyCast is a weather website that allows users to search for weather information for any city in the world.
  
 ## Description
  
-An in-depth paragraph about your project and overview of use.
+Built using Python, this website allows users to search for weather information for any city in the world.
+Features include:
+* Search for weather information for any city in the world
+* Display current weather conditions
+* Display weather forecast for next 5 days, expanding out to 14 days
+* Data includes temperature, humidity, wind speed, air pressure, chance of rain, and sunrise/sunset times
+* Data is displayed in a user-friendly format
  
 ## Getting Started
  
 ### Dependencies
  
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
-* List pip install instructions.
+* All libraries needed to run the program are included in the requirements.txt file
  
 ### Installing
  
-* How/where to download your program
-* Any modifications needed to be made to files/folders
- 
+* Install all libraries listed in requirements.txt by running the command
+
+```aiignore
+pip install -r requirements.txt
+```
 ### Executing program
  
-* How to run the program
-* Step-by-step bullets
+* Run the program by running the following command and opening the website
 ```
-code blocks for commands
-```
- 
-## Help
- 
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
+python app.py
 ```
  
 ## Authors
+
  
-Contributors names and contact info
- 
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
+Kyle Lavigne
  
 ## Version History
- 
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
+
 * 0.1
     * Initial Release
- 
-## License
- 
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
  
 ## Acknowledgments
  
 Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
+* [Weather API - Weather Data API](https://www.weatherapi.com/)
+* [Flask - Website Framework](https://flask.palletsprojects.com/en/stable/)
+* [matplotlib - Forecast Chart](https://matplotlib.org/stable/api/index.html)
+* [Leaflet.js - Map API](https://leafletjs.com/reference.html)

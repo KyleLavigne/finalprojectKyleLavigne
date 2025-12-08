@@ -183,7 +183,7 @@ def index():
     query = ""
     weather_data = None
     error = None
-    # This is just the "collapsed" view length the UI starts with
+    # This is the "collapsed" view length the UI starts with
     days_view = 5
     bg_theme = "default"
 
@@ -208,7 +208,7 @@ def index():
         query=query,
         weather=weather_data,
         error=error,
-        days=days_view,          # still available if the template wants it
+        days=days_view,
         bg_theme=bg_theme,
         map_timestamp=map_timestamp,
     )
