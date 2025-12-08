@@ -20,8 +20,10 @@ Features include:
 ## Getting Started
  
 ### Dependencies
+
  
 * All libraries needed to run the program are included in the requirements.txt file
+* WeatherAPI.com API key
  
 ### Installing
  
